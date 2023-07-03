@@ -290,6 +290,9 @@ class GPT(nn.Module):
             # if the sequence context is growing too long we must crop it at block_size
             idx_cond = idx if idx.size(1) <= self.block_size else idx[:, -self.block_size:]
             # forward the model to get the logits for the index in the sequence
+            # the following is equivalent to
+            # logits, _ = self.forward(idx_cond)
+            # see the dark magic defined in nn.Module - _call_impl
             logits, _ = self(idx_cond)
             # pluck the logits at the final step and scale by desired temperature
             logits = logits[:, -1, :] / temperature

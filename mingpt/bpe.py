@@ -16,6 +16,16 @@ import requests
 import torch
 
 # -----------------------------------------------------------------------------
+def is_screen_friendly(code: int) -> bool:
+    """ returns True for the 188 integers that render fine in their original form and need no shifting
+
+    - code: the byte code of the character
+    """ 
+    return (
+        (code >= ord('!') and code <= ord('~'))
+        or (code >= ord("¡") and code <= ord("¬"))
+        or (code >= ord("®") and code <= ord("ÿ"))
+    )
 
 def bytes_to_unicode():
     """
@@ -32,20 +42,16 @@ def bytes_to_unicode():
     that "look nice", either in their original form, or a funny shifted character
     like 'Ā', or 'Ġ', etc.
     """
-    # the 188 integers that render fine in their original form and need no shifting
-    bs = list(range(ord("!"), ord("~")+1))+list(range(ord("¡"), ord("¬")+1))+list(range(ord("®"), ord("ÿ")+1))
-    cs = bs[:] # all integers b in bs will simply map to chr(b) in the output dict
-    # now get the representations of the other 68 integers that do need shifting
-    # each will get mapped chr(256 + n), where n will grow from 0...67 in the loop
+    d = {}
     n = 0
-    for b in range(2**8):
-        if b not in bs:
-            # if this byte is "ugly" then map it to the next available "nice" character
-            bs.append(b)
-            cs.append(2**8+n)
+    code_range = 2**8
+    for i in range(code_range):
+        if is_screen_friendly(i): 
+            d[i] = chr(i)
+        else:
+            # if not screen friendly, shift the code by the code_range 2**8
+            d[i] = chr(n + code_range)
             n += 1
-    cs = [chr(n) for n in cs]
-    d = dict(zip(bs, cs))
     return d
 
 def get_pairs(word):
