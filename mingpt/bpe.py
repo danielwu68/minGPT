@@ -15,6 +15,8 @@ import requests
 
 import torch
 
+from itertools import count
+
 # -----------------------------------------------------------------------------
 def is_screen_friendly(code: int) -> bool:
     """ returns True for the 188 integers that render fine in their original form and need no shifting
@@ -42,17 +44,14 @@ def bytes_to_unicode():
     that "look nice", either in their original form, or a funny shifted character
     like 'Ā', or 'Ġ', etc.
     """
-    d = {}
-    n = 0
     code_range = 2**8
-    for i in range(code_range):
-        if is_screen_friendly(i): 
-            d[i] = chr(i)
-        else:
-            # if not screen friendly, shift the code by the code_range 2**8
-            d[i] = chr(n + code_range)
-            n += 1
-    return d
+    # start counting n from 2**8 (256)
+    n = count(code_range)
+    return {
+        # if not screen friendly, shift it as next n
+        i: chr(i) if is_screen_friendly(i) else chr(next(n))
+        for i in range(code_range)
+    }
 
 def get_pairs(word):
     """
